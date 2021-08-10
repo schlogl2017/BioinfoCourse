@@ -25,10 +25,6 @@ class GenomicSequence:
     def __index__(self):
         return 1
 
-    def find_it(self, sub_str, start=0, end=1):
-        """Method to find a substring."""
-        return str(self).find(sub_str, start, end)
-
     def get_slice(self, start, end, pace=1):
         """Returns the substring with start position, end position
         and a strider."""
@@ -42,7 +38,7 @@ class GenomicSequence:
     def get_base_composition(self):
         """Returns the frequency of characters that compound the
         input string."""
-        base_comp = {base: self.sequence.count(base) / self.length
+        base_comp = {base: self.sequence.count(base)/self.length
                      for base in self.sequence}
         return base_comp
 
@@ -58,7 +54,7 @@ class GenomicSequence:
 
     def get_at_gc_ratio(self):
         """Returns the at/gc ratio of a genome."""
-        return self.get_at_content() / self.get_gc_content()
+        return self.get_at_content()/self.get_gc_content()
 
     def get_sequence_range(self, start, end, pace):
         """Returns the substring with start position, end position
@@ -68,7 +64,7 @@ class GenomicSequence:
     def get_kmers_counts(self, k=1):
         """Returns the count of all the contiguous and overlapping
         substrings of length K from a genome."""
-        return Counter(self.sequence[i:i + k] for i in range(self.length - k + 1))
+        return Counter(self.sequence[i:i+k] for i in range(self.length - k + 1))
 
     def get_kmers_frequencies(self, k=1):
         """Returns the frequencies of all the contiguous and overlapping
@@ -88,13 +84,27 @@ class GenomicSequence:
         """Returns the reverse complement strand of the genome."""
         return self.get_strand_complement()[::-1]
 
+    def check_is_palindrome(self, sequence):
+        """Returns True if the sequence is palindromic other wise
+        False."""
+        return self.sequence.find(sequence[::-1]) == 0
+
     def get_palindromes(self, k):
         """Returns the count of all the palindromic
                 substrings of a genome."""
-        kmers = (self.sequence[i:i + k] for i
-                 in range(self.length - k + 1))
-        palindromics = [kmer for kmer in kmers if kmer.find(kmer[::-1]) == 0]
-        return palindromics
+        kmers = list(self.get_kmers_counts(k).keys())
+        rev_kmers = [self.kmer.get_reverse_complement() for self.kmer in kmers]
+        palindromes = []
+        for mer1, mer2 in zip(kmers, rev_kmers):
+            if mer1 == mer2:
+                palindromes.append((mer1, mer2))
+        return palindromes
+
+    def get_palindromes_counts(self, k):
+        """"Returns the count of all palindromes from a string."""
+        palindromes = self.sequence.get_palindromes(k)
+        return  Counter(palindromes)
+
 
 # dna = GenomicSequence('aaaacgtagcc')
 # print(dna)
@@ -109,5 +119,6 @@ class GenomicSequence:
 # print(sum(dna.get_kmers_frequencies(3).values()))
 # print(dna.get_strand_complement())
 # print(dna.get_reverse_complement())
-# dna2 = GenomicSequence('guttugguttug')
-# print(list(dna2.get_palindromes(dna2.length)))
+# s = GenomicSequence('AGA')
+# s2 = "AG"
+# print(s.check_is_palindrome(s2))

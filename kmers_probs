@@ -1,0 +1,34 @@
+prob de não encontrar nenhum kmer
+(1-p)**N (se ns 2 fitas N*2)
+Em N = 10000pb
+(1 - 1/(4**k))**(N**4)
+(1-1/(4^7))^(2*10^4)
+.29501166548155827197
+This is the chance of not seeing the kmer at all.
+
+Here's how I think about it:
+
+If the target you are looking for it two-stranded, that gives 2 possible 7-mers that can match any specific location (or equivalently, 2 possible locations that a 7-mer can match).
+As you said, there are 4^7 = 16384 possible 7-mers, giving a 2 out of 16384 chance of seeing a specific 7-mer at each location.
+In a 10000kb region, there are 10000 - (7-1) = 9994 possible positions for a kmer.
+The probability of seeing it at least once is the sum of the probability of seeing it once, plus the probability of seeing it twice, plus the probability of seeing it three times, etc; it is simpler to calculate the probability of not seeing it, so let's do that.
+So, combining the above:
+
+The chance that the kmer isn't at one specific location is 16382/16384, or about 99.99%.
+Apply this probability across all locations: (16382/16384)^9994, the probability that the 7-mer does not exist in this region is 29.52%, and 70.48% that it exists one or more times, which agrees with Istvan's answer above.
+
+
+First approach: I did almost what you suggested. In addition, I also took the base composition of the scanned sequences into account. E.g, if there are 30% As, the probability to see an A at a specific position is 0.3. The probability of a 7-mer like AATGCCA would be:
+
+(prob. of A) ^ 3 * (prob. of C) ^ 2 * (prob. of T) ^ 1 * (prob. of G) ^ 1
+
+This probability times the number of scanned windows (10000 – 6 for 10kB) gives the number of occurrences that we would expect just by chance.
+
+What I did not like about this approach is that I assume the scanned windows to be independent from each other, which they are not, because each window overlaps by 6 bases with the neighboring windows.
+
+Second approach: I shuffled the nucleotides of the scanned sequence many times, each time scanning the randomly generated sequence and counting the occurrences of my motif. On average, this gave me exactly the result that I predicted with my first approach. I guess that the dependence of the windows is not of practical relevance for long sequences.
+
+In addition, one could calculate something like a p-value for the observed occurrences, asking: What is the probability to find the motif at least as often as we did just by chance. In terms of my first approach, one would use a Poisson distribution to do this, using the calculated probability of the k-mer and the number of scanned windows as n. In terms of the second approach, one would just see in how many cases the motif was found as often as actually observed or more in the shuffled sequences. For example: You found the motif twice in your scanned sequence. After shuffling the sequence 1000 times, in 30 cases you found the motif twice or even more often than twice. This would give you a p-value of 0.03.
+
+$RSAT/perl-scripts/oligo-analysis  -v 1 -sort -i $RSAT/public_html/tmp/www-data/2021/06/28/retrieve-seq_2021-06-28.204435_ltzBY9.fasta.fasta -format fasta  -return occ -table -1str -quick_if_possible  -seqtype dna -bg upstream -org Haemophilus_influenzae_10810_uid86647 -pseudo 0.01 -l 4 -o $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_4nt.tab; $RSAT/perl-scripts/oligo-analysis  -v 1 -sort -i $RSAT/public_html/tmp/www-data/2021/06/28/retrieve-seq_2021-06-28.204435_ltzBY9.fasta.fasta -format fasta  -return occ -table -1str -quick_if_possible  -seqtype dna -bg upstream -org Haemophilus_influenzae_10810_uid86647 -pseudo 0.01 -l 5 -o $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_5nt.tab; $RSAT/perl-scripts/oligo-analysis  -v 1 -sort -i $RSAT/public_html/tmp/www-data/2021/06/28/retrieve-seq_2021-06-28.204435_ltzBY9.fasta.fasta -format fasta  -return occ -table -1str -quick_if_possible  -seqtype dna -bg upstream -org Haemophilus_influenzae_10810_uid86647 -pseudo 0.01 -l 6 -o $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_6nt.tab; $RSAT/perl-scripts/oligo-analysis  -v 1 -sort -i $RSAT/public_html/tmp/www-data/2021/06/28/retrieve-seq_2021-06-28.204435_ltzBY9.fasta.fasta -format fasta  -return occ -table -1str -quick_if_possible  -seqtype dna -bg upstream -org Haemophilus_influenzae_10810_uid86647 -pseudo 0.01 -l 7 -o $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_7nt.tab; $RSAT/perl-scripts/oligo-analysis  -v 1 -sort -i $RSAT/public_html/tmp/www-data/2021/06/28/retrieve-seq_2021-06-28.204435_ltzBY9.fasta.fasta -format fasta  -return occ -table -1str -quick_if_possible  -seqtype dna -bg upstream -org Haemophilus_influenzae_10810_uid86647 -pseudo 0.01 -l 8 -o $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_8nt.tab; cat $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_4nt.tab $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_5nt.tab $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_6nt.tab $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_7nt.tab $RSAT/public_html/tmp/www-data/2021/06/28/oligo-analysis_2021-06-28.204830_6uDNPv_8nt.tab  -v 1 -sort -i $RSAT/public_html/tmp/www-data/2021/06/28/retrieve-seq_2021-06-28.204435_ltzBY9.fasta.fasta -format fasta  -return occ -table -1str -quick_if_possible  -seqtype dna -bg upstream -org Haemophilus_influenzae_10810_uid86647 -pseudo 0.01
+
