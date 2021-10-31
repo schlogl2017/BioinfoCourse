@@ -1443,3 +1443,45 @@ def cleaning_sequence_regex(sequence):
     """
     amb = re.compile(r"[^ACGT]")
     return amb.sub("", sequence)
+
+def sequence_chunker(sequence, window_size, step):
+    '''
+    Return a iterator that yield start position, end position, and a property 
+    calculated by a function, as tuple. The analysis is with overlapping windows.
+    
+    Inputs:
+        sequence - a string representing a sequence (DNA/RNA/Protein)
+        window_size - a integer representing the length of sequence to be analyzed
+                   at each step in the full sequence.
+        step - a integer representing the length of oerlapping sequence allowed.
+    
+    Outputs:
+        A tuple:
+            start - a number representing the start of the subsequence analyzed.
+            end - a number representing the end of the subsequence analyzed.
+            seq - string representing the subsequence/chunk
+    '''
+    seq = sequence.upper()
+    for start in range(0, len(seq), step):
+        end = start + window_size
+        if end > len(seq):
+            break
+        yield start, end, seq[start:end]
+
+
+def do_bases_count_slide_window(sequence, window_size, step, alphabet, count=True):
+    nuc_cnt_sw = defaultdict(dict)
+    for st, end, seq in sequence_chunker(sequence, window_size, step):
+        win = f'{st}-{end}'
+        if count:
+            nuc_cnt_sw[win] = base_stats(seq, alphabet, as_count=True, as_dict=True)
+        else:
+            nuc_cnt_sw[win] = base_stats(seq, alphabet, as_count=False, as_dict=True)
+    return nuc_cnt_sw
+
+def do_kmer_count_slide_window(sequence, window_size, step, k):
+    km_cnt_sw = defaultdict(dict)
+    for st, end, seq in sequence_chunker(sequence, window_size, step):
+        win = f'{st}-{end}'
+        km_cnt_sw[win] = count_kmers(seq, k)
+    return km_cnt_sw
